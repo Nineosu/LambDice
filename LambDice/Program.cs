@@ -16,12 +16,12 @@ namespace LambDice
 
             while (true)
             {
-                Console.WriteLine("Играть против бота: 1\nИграть вдвоём: 2\n");
+                Console.WriteLine("Играть против бота: 1\nИграть вдвоём: 2\nПоказать правила игры: 3\n");
 
                 do
                 {
-                    Console.WriteLine("[Выберите режим игры]");
-                } while (int.TryParse(Console.ReadLine(), out input) && input < 1 || input > 2 );
+                    Console.WriteLine("[Выберите пункт]");
+                } while (int.TryParse(Console.ReadLine(), out input) && input < 1 || input > 3 );
                 
                 switch (input)
                 {
@@ -30,6 +30,19 @@ namespace LambDice
                         break;
                     case 2:
                         GameWithUser();
+                        break;
+                    case 3:
+                        Console.Clear();
+                        Console.WriteLine("Играть против бота: 1\nИграть вдвоём: 2\nПоказать правила игры: 3\n");
+                        Console.WriteLine("\nЕсть два игрока\r\n" +
+                            "У них имеется доска 3х3\r\n" +
+                            "Каждый из них бросает кубик, и должен решить в какую колонку разместить выпавшее число\r\n" +
+                            "Все числа в колонке складываются\r\n" +
+                            "Если разместить два и более одинаковых чисел в одной колонке, они складываются и перемножаются на количество таких чисел\r\n" +
+                            "Если на своем ходу оппонент разместит эквивалентное число в ту же колонку, что и у игрока, все числа игрока, равные эквивалентному числу, обнулятся\r\n" +
+                            "Игра закончена когда первая доска будет заполнена\r\n" +
+                            "Все очки суммируются с трёх колонок\r\n" +
+                            "Победитель тот, кто набрал больше очков");
                         break;
                 }
             }
@@ -137,7 +150,7 @@ namespace LambDice
     {
         protected string Name { get; }
         protected ConsoleColor BoardColor;
-        protected Random random = new Random();
+        protected static Random random = new Random();
         protected int[,] board = new int[3, 3];
         protected int Score = 0;
 
@@ -300,6 +313,7 @@ namespace LambDice
 
         public int ThrowDice()
         {
+            Thread.Sleep(10);
             return random.Next(1, 7);
         }
 
