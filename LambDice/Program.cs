@@ -12,35 +12,98 @@ namespace LambDice
     {
         static void Main(string[] args)
         {
-            Player user = new Player("Игрок", ConsoleColor.Green);
-            Bot bot = new Bot("Бот", ConsoleColor.Red);
-            string winner;
-
-            RenderBoards(user, bot);
+            int input;
 
             while (true)
             {
-                user.MakeMove(bot);
-                RenderBoards(user, bot);
-                if (IsGameOver())
-                {
-                    Console.WriteLine($"Игра закончена. Победил {WhoWin(user, bot).PlayerName}!");
-                    break;
-                }
+                Console.WriteLine("Играть против бота: 1\nИграть вдвоём: 2\n");
 
-                bot.MakeMove(user);
-                Thread.Sleep(1000);
-                RenderBoards(user, bot);
-                if (IsGameOver())
+                do
                 {
-                    Console.WriteLine($"Игра закончена. Победил {WhoWin(user, bot).PlayerName}!");
-                    break;
+                    Console.WriteLine("[Выберите режим игры]");
+                } while (int.TryParse(Console.ReadLine(), out input) && input < 1 || input > 2 );
+                
+                switch (input)
+                {
+                    case 1:
+                        GameWithBot();
+                        break;
+                    case 2:
+                        GameWithUser();
+                        break;
                 }
             }
 
-            bool IsGameOver()
+            void GameWithBot()
             {
-                if (user.IsBoardFilled() || bot.IsBoardFilled())
+                Player user = new Player("Игрок", ConsoleColor.Green);
+                Bot bot = new Bot("Бот", ConsoleColor.Red);
+                RenderBoards(user, bot);
+
+                while (true)
+                {
+                    user.MakeMove(bot);
+                    RenderBoards(user, bot);
+                    if (IsGameOver(user, bot))
+                    {
+                        Console.Write($"Игра закончена. Победил ");
+                        Console.ForegroundColor = WhoWin(user, bot).PlayerColor;
+                        Console.Write(WhoWin(user, bot).PlayerName + "!\n");
+                        Console.ResetColor();
+                        break;
+                    }
+
+                    bot.MakeMove(user);
+                    Thread.Sleep(500);
+                    RenderBoards(user, bot);
+                    if (IsGameOver(user, bot))
+                    {
+                        Console.Write($"Игра закончена. Победил ");
+                        Console.ForegroundColor = WhoWin(user, bot).PlayerColor;
+                        Console.Write(WhoWin(user, bot).PlayerName + "!\n");
+                        Console.ResetColor();
+                        break;
+                    }
+                }
+            }
+
+            void GameWithUser()
+            {
+                Player user = new Player("Игрок", ConsoleColor.Green);
+                Player user2 = new Player("Игрок 2", ConsoleColor.Blue);
+                string winner;
+                
+                RenderBoards(user, user2);
+
+                while (true)
+                {
+                    user.MakeMove(user2);
+                    RenderBoards(user, user2);
+                    if (IsGameOver(user, user2))
+                    {
+                        Console.Write($"Игра закончена. Победил ");
+                        Console.ForegroundColor = WhoWin(user, user2).PlayerColor;
+                        Console.Write(WhoWin(user, user2).PlayerName + "!\n");
+                        Console.ResetColor();
+                        break;
+                    }
+
+                    user2.MakeMove(user);
+                    RenderBoards(user, user2);
+                    if (IsGameOver(user, user2))
+                    {
+                        Console.Write($"Игра закончена. Победил ");
+                        Console.ForegroundColor = WhoWin(user, user2).PlayerColor;
+                        Console.Write(WhoWin(user, user2).PlayerName + "!\n");
+                        Console.ResetColor();
+                        break;
+                    }
+                }
+            }
+
+            bool IsGameOver(Player player1, Player player2)
+            {
+                if (player1.IsBoardFilled() || player2.IsBoardFilled())
                     return true;
                 else
                     return false;
@@ -55,18 +118,18 @@ namespace LambDice
             }
         }
 
-        static public void RenderBoards(Player user, Bot bot)
+        static public void RenderBoards(Player user, Player user2)
         {
             Console.Clear();
 
             Console.SetCursorPosition(70, 2);
             Console.WriteLine(user.PlayerName);
-            user.DrawBoardWithPosition(70, 3);
+            user.DrawBoardWithPosition(70, 4);
 
             Console.SetCursorPosition(70, 10);
-            Console.WriteLine(bot.PlayerName);
-            bot.DrawBoardWithPosition(70, 11);
-            Console.SetCursorPosition(0, 2);
+            Console.WriteLine(user2.PlayerName);
+            user2.DrawBoardWithPosition(70, 12);
+            Console.SetCursorPosition(0, 0);
         }
     }
 
@@ -80,6 +143,7 @@ namespace LambDice
 
         public string PlayerName => Name;
         public int PlayerScore => Score;
+        public ConsoleColor PlayerColor => BoardColor;
 
         public Player(string name, ConsoleColor color)
         {
@@ -101,14 +165,14 @@ namespace LambDice
             }
 
             Console.SetCursorPosition(offsetX, offsetY + board.GetLength(0));
-            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.ForegroundColor = ConsoleColor.White;
             for (int column = 0; column < board.GetLength(1); column++)
             {
                 Console.Write(CalculateColumnSum(column) + " ");
             }
             Console.ResetColor();
 
-            Console.ForegroundColor = ConsoleColor.White;
+            Console.ForegroundColor = ConsoleColor.Yellow;
             Console.SetCursorPosition(offsetX + board.GetLength(1)*3, offsetY + board.GetLength(0));
             Console.Write(CalculateScore());
             Console.ResetColor();
@@ -200,14 +264,21 @@ namespace LambDice
         public void MakeMove(Player opponent)
         {
             int diceRoll = ThrowDice();
-            Console.WriteLine($"{Name} кидает кубик... Выпало число {diceRoll}!");
+
+            Repaint(Name, BoardColor);
+            Console.Write(" кидает кубик... Выпало число ");
+
+            Repaint($"{diceRoll}!\n", ConsoleColor.Cyan);
+
             Thread.Sleep(500);
             Console.WriteLine("В какую колонку его поставить?");
 
             int chosenColumn;
             while (true)
             {
+                Console.ForegroundColor = BoardColor;
                 string input = Console.ReadLine();
+                Console.ResetColor();
 
                 if (int.TryParse(input, out chosenColumn) && chosenColumn >= 1 && chosenColumn <= 3)
                 {
@@ -244,6 +315,13 @@ namespace LambDice
             }
             return true;
         }
+
+        public void Repaint(string text, ConsoleColor color)
+        {
+            Console.ForegroundColor = color;
+            Console.Write(text);
+            Console.ResetColor();
+        }
     }
 
     class Bot : Player
@@ -253,10 +331,17 @@ namespace LambDice
         public void MakeMove(Player opponent)
         {
             int diceRoll = ThrowDice();
-            Console.WriteLine($"{Name} кидает кубик... Выпало число {diceRoll}!");
+
+            Repaint(Name, BoardColor);
+
+            Console.Write(" кидает кубик... Выпало число ");
+
+            Repaint($"{diceRoll}!\n", ConsoleColor.Cyan);
+
             Thread.Sleep(500);
-            Console.WriteLine($"{Name} выбирает колонку...");
-            Thread.Sleep(1000);
+            Repaint(Name, BoardColor);
+            Console.WriteLine(" выбирает колонку...");
+            Thread.Sleep(500);
 
             int column;
             do
@@ -264,7 +349,6 @@ namespace LambDice
                 column = random.Next(0, 3);
             } while (CheckRow(column) == -1);
 
-            Console.WriteLine($"{Name} сделал ход: Кубик {diceRoll} в колонку {column + 1}");
             UpdateBoard(column, diceRoll, opponent);
         }
     }
