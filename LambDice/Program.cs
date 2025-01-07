@@ -137,12 +137,10 @@ namespace LambDice
                 int number = pair.Key;
                 int count = pair.Value;
 
-                if (number == 1)
-                    sum += number * count;
-
-                else if (count > 1)
-                    sum += (int)Math.Pow(number, count);
-
+                if (count == 2)
+                    sum += (number + number) * count;
+                else if (count == 3)
+                    sum += (number + number + number) * count;
                 else
                     sum += number;
             }
